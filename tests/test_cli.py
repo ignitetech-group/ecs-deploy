@@ -4,7 +4,7 @@ import pytest
 from click.testing import CliRunner
 from mock.mock import patch
 
-from ecs_deploy import cli
+from ecs_deploy import cli, VERSION
 from ecs_deploy.cli import get_client, record_deployment
 from ecs_deploy.ecs import EcsClient
 from ecs_deploy.newrelic import Deployment, NewRelicDeploymentException
@@ -30,11 +30,18 @@ def test_get_client(ecs_client):
 
 def test_ecs(runner):
     result = runner.invoke(cli.ecs)
-    assert result.exit_code == 0
-    assert not result.exception
+    assert result.exit_code == 2
+
     assert 'Usage: ecs [OPTIONS] COMMAND [ARGS]' in result.output
     assert '  deploy  ' in result.output
     assert '  scale   ' in result.output
+
+
+def test_ecs_version(runner):
+    result = runner.invoke(cli.ecs, ('--version'))
+    assert result.exit_code == 0
+    assert not result.exception
+    assert result.output == f'ecs-deploy, version {VERSION}\n'
 
 
 @patch('ecs_deploy.cli.get_client')
