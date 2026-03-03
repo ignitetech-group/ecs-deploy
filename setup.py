@@ -10,14 +10,12 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
-
 dependencies = [
     'click>=7.1.2, <9',
     'click-log==0.3.2',
     'botocore>=1.32.6',
     'boto3>=1.29.6',
-    'future',
-    'requests<2.30.0',
+    'requests>=2.32.4',
     'dictdiffer>=0.9.0',
 ]
 
@@ -29,8 +27,7 @@ setup(
     license='BSD-3-Clause',
     author='Fabian Fuelling',
     author_email='pypi@fabfuel.de',
-    description='Powerful CLI tool to simplify Amazon ECS deployments, '
-                'rollbacks & scaling',
+    description='Powerful CLI tool to simplify Amazon ECS deployments, rollbacks & scaling',
     long_description=readme(),
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
@@ -50,7 +47,9 @@ setup(
         'Operating System :: MacOS',
         'Operating System :: Unix',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11'
+        'Programming Language :: Python :: 3.12'
+        'Programming Language :: Python :: 3.13'
     ]
 )
