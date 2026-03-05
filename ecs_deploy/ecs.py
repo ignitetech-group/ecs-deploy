@@ -98,10 +98,16 @@ class EcsClient(object):
             )
 
     def list_tasks(self, cluster_name, service_name):
-        return self.boto.list_tasks(
-            cluster=cluster_name,
-            serviceName=service_name
-        )
+        """List all tasks for a service, handling pagination.
+
+        The AWS list_tasks API returns a maximum of 100 task ARNs per call.
+        This method paginates through all results to get the complete list.
+        """
+        task_arns = []
+        paginator = self.boto.get_paginator('list_tasks')
+        for page in paginator.paginate(cluster=cluster_name, serviceName=service_name):
+            task_arns.extend(page.get('taskArns', []))
+        return {'taskArns': task_arns}
 
     def describe_tasks(self, cluster_name, task_arns):
         return self.boto.describe_tasks(cluster=cluster_name, tasks=task_arns)

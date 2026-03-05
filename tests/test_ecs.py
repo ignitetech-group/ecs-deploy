@@ -1233,8 +1233,19 @@ def test_client_describe_unknown_task_definition(client):
 
 
 def test_client_list_tasks(client):
-    client.list_tasks(u'test-cluster', u'test-service')
-    client.boto.list_tasks.assert_called_once_with(cluster=u'test-cluster', serviceName=u'test-service')
+    # Mock paginator to return task ARNs
+    mock_paginator = Mock()
+    mock_paginator.paginate.return_value = [
+        {'taskArns': ['task-arn-1', 'task-arn-2']},
+        {'taskArns': ['task-arn-3']},
+    ]
+    client.boto.get_paginator.return_value = mock_paginator
+
+    result = client.list_tasks(u'test-cluster', u'test-service')
+
+    client.boto.get_paginator.assert_called_once_with('list_tasks')
+    mock_paginator.paginate.assert_called_once_with(cluster=u'test-cluster', serviceName=u'test-service')
+    assert result == {'taskArns': ['task-arn-1', 'task-arn-2', 'task-arn-3']}
 
 
 def test_client_describe_tasks(client):
