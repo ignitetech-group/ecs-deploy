@@ -1,6 +1,6 @@
 import re
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Bound the HTTP calls to slack so a hung incoming-webhook endpoint cannot
 # block the deployment indefinitely. Slack incoming webhooks return fast
@@ -18,7 +18,12 @@ class SlackNotification(object):
     def __init__(self, url, service_match):
         self.__url = url
         self.__service_match_re = re.compile(service_match or '')
-        self.__timestamp_start = datetime.utcnow()
+        # `datetime.utcnow()` is deprecated in 3.12+ and slated for removal
+        # in a future Python release. Use a timezone-aware UTC datetime
+        # instead. `timezone.utc` (rather than `datetime.UTC`, which is
+        # 3.11+) keeps compat with the project's declared 3.10 floor in
+        # setup.py.
+        self.__timestamp_start = datetime.now(timezone.utc)
 
     def get_payload(self, title, messages, color=None):
         fields = []
@@ -88,7 +93,7 @@ class SlackNotification(object):
         if not self.__url or not self.__service_match_re.search(service or rule):
             return
 
-        duration = datetime.utcnow() - self.__timestamp_start
+        duration = datetime.now(timezone.utc) - self.__timestamp_start
 
         messages = [
             ('Cluster', cluster),
@@ -113,7 +118,7 @@ class SlackNotification(object):
         if not self.__url or not self.__service_match_re.search(service or rule):
             return
 
-        duration = datetime.utcnow() - self.__timestamp_start
+        duration = datetime.now(timezone.utc) - self.__timestamp_start
 
         messages = [
             ('Cluster', cluster),
