@@ -228,14 +228,9 @@ def test_deploy_one_new_health_check(get_client, cmd_input, cmd_expected, runner
     assert u"Deploying based on task definition: test-task:1" in result.output
     assert u"Updating task definition" in result.output
 
-    expected_health_check = {
-        u'command': cmd_expected,
-        u'interval': 30,
-        u'timeout': 5,
-        u'retries': 3,
-        u'startPeriod': 0,
-
-    }
+    # (Removed: an `expected_health_check` dict was built here but never used
+    #  in any assertion. F841. The per-field string-match assertions below
+    #  cover the same surface.)
 
     assert 'Changed healthCheck of container "application" to: ' in result.output
     assert "'command': " in result.output
@@ -889,12 +884,10 @@ def test_scale_with_timeout(get_client, runner):
            u"https://github.com/fabfuel/ecs-deploy#timeout" in result.output
 
 
-@patch('ecs_deploy.cli.get_client')
-def test_scale_without_credentials(get_client, runner):
-    get_client.return_value = EcsTestClient()
-    result = runner.invoke(cli.scale, (CLUSTER_NAME, SERVICE_NAME, '2'))
-    assert result.exit_code == 1
-    assert result.output == u'Unable to locate credentials. Configure credentials by running "aws configure".\n\n'
+# (Removed: a literal-duplicate `test_scale_without_credentials` lived here.
+#  F811 — pytest only saw the duplicate, silently shadowing the original
+#  ~70 lines above. The original is preserved; this duplicate had no extra
+#  coverage. See PR description for the full bug-fix list.)
 
 
 @patch('ecs_deploy.cli.get_client')

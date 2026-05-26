@@ -2,6 +2,13 @@ import re
 import requests
 from datetime import datetime
 
+# Bound the HTTP calls to slack so a hung incoming-webhook endpoint cannot
+# block the deployment indefinitely. Slack incoming webhooks return fast
+# (<1s typical) for small payloads; 10s is generous. Without this, a
+# misconfigured slack URL or DNS failure could leave the CLI hanging
+# until the OS-level socket timeout (minutes).
+REQUEST_TIMEOUT_SECONDS = 10
+
 
 class SlackException(Exception):
     pass
@@ -70,7 +77,7 @@ class SlackNotification(object):
 
         payload = self.get_payload('Deployment has started', messages)
 
-        response = requests.post(self.__url, json=payload)
+        response = requests.post(self.__url, json=payload, timeout=REQUEST_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             raise SlackException('Notifying deployment failed')
@@ -97,7 +104,7 @@ class SlackNotification(object):
 
         payload = self.get_payload('Deployment finished successfully', messages, 'good')
 
-        response = requests.post(self.__url, json=payload)
+        response = requests.post(self.__url, json=payload, timeout=REQUEST_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             raise SlackException('Notifying deployment failed')
@@ -122,7 +129,7 @@ class SlackNotification(object):
 
         payload = self.get_payload('Deployment failed', messages, 'danger')
 
-        response = requests.post(self.__url, json=payload)
+        response = requests.post(self.__url, json=payload, timeout=REQUEST_TIMEOUT_SECONDS)
 
         if response.status_code != 200:
             raise SlackException('Notifying deployment failed')

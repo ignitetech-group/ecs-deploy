@@ -1310,7 +1310,10 @@ def test_client_register_task_definition_without_optional_values(client):
     volumes = [{u'foo': u'bar'}]
     role_arn = 'arn:test:role'
     execution_role_arn = 'arn:test:role'
-    runtime_platform = {u'cpuArchitecture': u'X86_64', u'operatingSystemFamily': u'LINUX'}
+    # Removed unused `runtime_platform` dict (F841): the "without optional
+    # values" test does not pass runtimePlatform to EcsTaskDefinition, so
+    # the variable was leftover copy-paste from the sibling "with optional
+    # values" test.
     task_definition = EcsTaskDefinition(
         containerDefinitions=containers,
         volumes=volumes,

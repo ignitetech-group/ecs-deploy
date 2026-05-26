@@ -413,18 +413,20 @@ class EcsTaskDefinition(object):
     def get_overrides(self):
         override = dict()
         overrides = []
-        for diff in self.diff:
-            if override.get('name') != diff.container:
-                override = dict(name=diff.container)
+        # Renamed loop variable from `diff` to `d` to avoid shadowing the
+        # `diff` function imported from dictdiffer at module scope (F402).
+        for d in self.diff:
+            if override.get('name') != d.container:
+                override = dict(name=d.container)
                 overrides.append(override)
-            if diff.field == 'command':
-                override['command'] = self.get_overrides_command(diff.value)
-            elif diff.field == 'environment':
-                override['environment'] = self.get_overrides_env(diff.value)
-            elif diff.field == 'secrets':
-                override['secrets'] = self.get_overrides_secrets(diff.value)
-            elif diff.field == 'dockerLabels':
-                override['dockerLabels'] = self.get_overrides_docker_labels(diff.value)
+            if d.field == 'command':
+                override['command'] = self.get_overrides_command(d.value)
+            elif d.field == 'environment':
+                override['environment'] = self.get_overrides_env(d.value)
+            elif d.field == 'secrets':
+                override['secrets'] = self.get_overrides_secrets(d.value)
+            elif d.field == 'dockerLabels':
+                override['dockerLabels'] = self.get_overrides_docker_labels(d.value)
         return overrides
 
     @staticmethod
@@ -1202,7 +1204,18 @@ class EcsTaskDefinition(object):
             if containers:
                 self.containers = containers
             else:
-                logger.warning("No container left after removal. Using original containers, not removing '{containers_}'.".format(container=container))
+                # Bug fix: the previous code did
+                #   "...not removing '{containers_}'.".format(container=container)
+                # which raised KeyError at runtime (placeholder name `containers_`
+                # did not match the kwarg `container`), and even if the
+                # placeholder name matched it would have used the stale loop
+                # variable from the preceding `for container in containers_not_found:`
+                # loop instead of the requested-removal set.
+                logger.warning(
+                    "No container left after removal. Using original "
+                    "containers, not removing '%s'.",
+                    containers_,
+                )
 
             if not self.containers == containers_tmp:
                 diff = EcsTaskDefinitionDiff(

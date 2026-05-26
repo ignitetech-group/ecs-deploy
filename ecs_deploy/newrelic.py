@@ -1,5 +1,13 @@
 import requests
 
+# Bound the HTTP call so a hung NewRelic endpoint cannot block the
+# deployment indefinitely. NewRelic's deployments-recording API returns
+# fast (<1s typical) for small JSON payloads; 10s is generous and matches
+# the bound applied to slack notifications. Without this, a misconfigured
+# proxy or DNS failure could leave the CLI hanging until the OS-level
+# socket timeout (minutes).
+REQUEST_TIMEOUT_SECONDS = 10
+
 
 class NewRelicException(Exception):
     pass
@@ -47,7 +55,12 @@ class Deployment(object):
 
     def deploy(self, revision, changelog, description):
         payload = self.get_payload(revision, changelog, description)
-        response = requests.post(self.endpoint, headers=self.headers, json=payload)
+        response = requests.post(
+            self.endpoint,
+            headers=self.headers,
+            json=payload,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        )
 
         if response.status_code != 201:
             try:
