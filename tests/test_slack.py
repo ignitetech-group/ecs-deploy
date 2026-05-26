@@ -117,7 +117,7 @@ def test_notify_start(post_mock, url, service_match, task_definition):
         ]
     }
 
-    post_mock.assert_called_with(url, json=payload)
+    post_mock.assert_called_with(url, json=payload, timeout=10)
 
 
 @patch('requests.post')
@@ -150,7 +150,7 @@ def test_notify_start_without_tag(post_mock, url, service_match, task_definition
         ]
     }
 
-    post_mock.assert_called_with(url, json=payload)
+    post_mock.assert_called_with(url, json=payload, timeout=10)
 
 
 @patch('requests.post')
@@ -178,12 +178,17 @@ def test_notify_success(post_mock, url, service_match, task_definition):
         ]
     }
 
-    post_mock.assert_called_with(url, json=payload)
+    post_mock.assert_called_with(url, json=payload, timeout=10)
 
 
+# Renamed from `test_notify_success` to `test_notify_failure`. The previous
+# definition at this line was a literal duplicate of the function name above
+# (F811) which silently hid the success-path test from pytest, AND its body
+# actually exercised `notify_failure` — so this test was broken and undetected
+# in two distinct ways at once.
 @patch('requests.post')
 @freeze_time()
-def test_notify_success(post_mock, url, service_match, task_definition):
+def test_notify_failure(post_mock, url, service_match, task_definition):
     post_mock.return_value = NotifyResponseSuccessfulMock()
 
     slack = SlackNotification(url, service_match)
@@ -206,14 +211,12 @@ def test_notify_success(post_mock, url, service_match, task_definition):
         ]
     }
 
-    post_mock.assert_called_with(url, json=payload)
+    post_mock.assert_called_with(url, json=payload, timeout=10)
 
 
-@patch('requests.post')
-def test_notify_start_without_url(post_mock, url, service_match, task_definition):
-    slack = SlackNotification(None, None)
-    slack.notify_start('my-cluster', 'my-tag', task_definition, 'my-comment', 'my-user', 'my-service', 'my-rule')
-    post_mock.assert_not_called()
+# Note: the previous duplicate of `test_notify_start_without_url` immediately
+# below this point (F811, hiding the original at the top of the file) has
+# been removed.
 
 
 @patch('requests.post')

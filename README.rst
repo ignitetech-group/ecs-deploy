@@ -1,11 +1,40 @@
 ECS Deploy
 ----------
 
-.. image:: https://badge.fury.io/py/ecs-deploy.svg
-    :target: https://badge.fury.io/py/ecs-deploy
+.. note::
 
-.. image:: https://github.com/fabfuel/ecs-deploy/actions/workflows/build.yml/badge.svg
-    :target: https://github.com/fabfuel/ecs-deploy/actions/workflows/build.yml
+    **This is a security-hardened fork of**
+    `fabfuel/ecs-deploy <https://github.com/fabfuel/ecs-deploy>`_
+    **maintained by ignitetech-group.**
+
+    This fork exists to provide a known-provenance copy of the ``ecs`` CLI
+    that is consumed (built from source) by
+    `ignitetech-group/action-ecs-deploy
+    <https://github.com/ignitetech-group/action-ecs-deploy>`_, replacing the
+    upstream wrapper's ``FROM fabfuel/ecs-deploy:1.11.3`` Docker Hub pull.
+
+    Differences from upstream ``fabfuel/ecs-deploy``:
+
+    - Default branch is ``main`` (upstream uses ``develop``).
+    - We do **not** publish to PyPI; the ``release.yml`` workflow is removed.
+    - We do **not** publish to Docker Hub; the ``docker.yml`` workflow is removed.
+    - All ``uses:`` references in CI workflows are pinned to 40-character
+      commit SHAs (no mutable ``@v3`` / ``@main`` refs).
+    - CI runs minimal-permission jobs (``permissions: contents: read``).
+    - Dependabot is enabled for ``github-actions`` and ``pip`` ecosystems.
+
+    Consumers of the Python CLI should pull a specific commit SHA from this
+    fork rather than relying on a tag or branch::
+
+        pip install 'git+https://github.com/ignitetech-group/ecs-deploy@<40-char-SHA>'
+
+    For the original project documentation (use cases, CLI flags, etc.),
+    everything below this notice continues to apply.
+
+----
+
+.. image:: https://github.com/ignitetech-group/ecs-deploy/actions/workflows/build.yml/badge.svg
+    :target: https://github.com/ignitetech-group/ecs-deploy/actions/workflows/build.yml
 
 `ecs-deploy` simplifies deployments on Amazon ECS by providing a convenience CLI tool for complex actions, which are executed pretty often.
 
@@ -45,27 +74,63 @@ Update a task definition (without running or deploying)::
 Installation
 ------------
 
-The project is available on PyPI. Simply run::
+.. note::
 
-    $ pip install ecs-deploy
+    This fork is **not published to PyPI or Homebrew**. Both upstream
+    publishing workflows (``release.yml`` for PyPI, ``docker.yml`` for
+    Docker Hub) were removed at fork bootstrap. The instructions below
+    install from this fork's git source pinned to a 40-character commit
+    SHA — see the fork notice at the top of this README for context.
 
-For [Homebrew](https://brew.sh/) users, you can also install [it](https://formulae.brew.sh/formula/ecs-deploy) via brew::
+Install from a pinned fork SHA::
 
-    $ brew install ecs-deploy
+    $ pip install 'git+https://github.com/ignitetech-group/ecs-deploy@<40-char-SHA>'
+
+Find the latest SHA at
+https://github.com/ignitetech-group/ecs-deploy/commits/main. Pinning to a
+SHA (rather than to ``main`` or to a tag) keeps installs reproducible and
+matches the supply-chain posture documented in the fork's ``AGENTS.md``.
+
+The upstream ``pip install ecs-deploy`` (PyPI) and ``brew install
+ecs-deploy`` (Homebrew formula) commands continue to install **upstream**
+fabfuel/ecs-deploy, **not** this fork. Use them only if you intentionally
+want upstream's release stream.
 
 Run via Docker
 --------------
-Instead of installing **ecs-deploy** locally, which requires a Python environment, you can run **ecs-deploy** via Docker. All versions starting from 1.7.1 are available on Docker Hub: https://cloud.docker.com/repository/docker/fabfuel/ecs-deploy
 
-Running **ecs-deploy** via Docker is easy as::
+.. note::
 
-    docker run fabfuel/ecs-deploy:1.10.2
+    This fork does **not** publish container images to Docker Hub. The
+    upstream ``fabfuel/ecs-deploy`` Docker Hub images are produced by
+    upstream's own CI (which is removed from this fork) — pulling them
+    bypasses our hardening (Debian Trixie base, hashed lockfile,
+    non-root user). To get those properties, build the image yourself
+    from this fork.
 
-In this example, the stable version 1.10.2 is executed. Alternatively you can use Docker tags ``master`` or ``latest`` for the latest stable version or Docker tag ``develop`` for the newest development version of **ecs-deploy**.
+Build locally from this fork::
 
-Please be aware, that when running **ecs-deploy** via Docker, the configuration - as described below - does not apply. You have to provide credentials and the AWS region via the command as attributes or environment variables::
+    $ git clone https://github.com/ignitetech-group/ecs-deploy
+    $ cd ecs-deploy
+    $ git checkout <40-char-SHA>
+    $ docker build -t ignitetech/ecs-deploy:<sha-short> .
+    $ docker run --rm ignitetech/ecs-deploy:<sha-short> --version
 
-    docker run fabfuel/ecs-deploy:1.10.2 ecs deploy my-cluster my-service --region eu-central-1 --access-key-id ABC --secret-access-key ABC
+The resulting image is built from ``python:3.13-slim-trixie`` (glibc 2.41
++ OpenSSL 3.5), runs as a non-root user (``uid=1001(app)``), and installs
+deps from a SHA-hashed ``requirements.txt`` lockfile. See ``Dockerfile``
++ ``AGENTS.md`` for the full hardening details.
+
+When running this image, the configuration described below does not apply
+the way it would for a host install — credentials and AWS region must
+be provided via env vars or CLI options at runtime::
+
+    $ docker run --rm \
+        -e AWS_ACCESS_KEY_ID=... \
+        -e AWS_SECRET_ACCESS_KEY=... \
+        -e AWS_DEFAULT_REGION=eu-central-1 \
+        ignitetech/ecs-deploy:<sha-short> \
+        deploy my-cluster my-service
 
 
 Configuration

@@ -114,7 +114,7 @@ def test_deploy_sucessful(post, api_key, app_id, user, region, revision, changel
     response = deployment.deploy(revision, changelog, description)
     payload = deployment.get_payload(revision, changelog, description)
 
-    post.assert_called_with(deployment.endpoint, headers=deployment.headers, json=payload)
+    post.assert_called_with(deployment.endpoint, headers=deployment.headers, json=payload, timeout=10)
     assert response.status_code == 201
 
 
