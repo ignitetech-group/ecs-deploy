@@ -1,11 +1,40 @@
 ECS Deploy
 ----------
 
-.. image:: https://badge.fury.io/py/ecs-deploy.svg
-    :target: https://badge.fury.io/py/ecs-deploy
+.. note::
 
-.. image:: https://github.com/fabfuel/ecs-deploy/actions/workflows/build.yml/badge.svg
-    :target: https://github.com/fabfuel/ecs-deploy/actions/workflows/build.yml
+    **This is a security-hardened fork of**
+    `fabfuel/ecs-deploy <https://github.com/fabfuel/ecs-deploy>`_
+    **maintained by ignitetech-group.**
+
+    This fork exists to provide a known-provenance copy of the ``ecs`` CLI
+    that is consumed (built from source) by
+    `ignitetech-group/action-ecs-deploy
+    <https://github.com/ignitetech-group/action-ecs-deploy>`_, replacing the
+    upstream wrapper's ``FROM fabfuel/ecs-deploy:1.11.3`` Docker Hub pull.
+
+    Differences from upstream ``fabfuel/ecs-deploy``:
+
+    - Default branch is ``main`` (upstream uses ``develop``).
+    - We do **not** publish to PyPI; the ``release.yml`` workflow is removed.
+    - We do **not** publish to Docker Hub; the ``docker.yml`` workflow is removed.
+    - All ``uses:`` references in CI workflows are pinned to 40-character
+      commit SHAs (no mutable ``@v3`` / ``@main`` refs).
+    - CI runs minimal-permission jobs (``permissions: contents: read``).
+    - Dependabot is enabled for ``github-actions`` and ``pip`` ecosystems.
+
+    Consumers of the Python CLI should pull a specific commit SHA from this
+    fork rather than relying on a tag or branch::
+
+        pip install 'git+https://github.com/ignitetech-group/ecs-deploy@<40-char-SHA>'
+
+    For the original project documentation (use cases, CLI flags, etc.),
+    everything below this notice continues to apply.
+
+----
+
+.. image:: https://github.com/ignitetech-group/ecs-deploy/actions/workflows/build.yml/badge.svg
+    :target: https://github.com/ignitetech-group/ecs-deploy/actions/workflows/build.yml
 
 `ecs-deploy` simplifies deployments on Amazon ECS by providing a convenience CLI tool for complex actions, which are executed pretty often.
 
