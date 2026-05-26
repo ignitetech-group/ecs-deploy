@@ -1,0 +1,50 @@
+# Tool configuration for the ignitetech-group fork of fabfuel/ecs-deploy.
+#
+# Project metadata stays in setup.py (PEP 517 backwards-compatible build) so
+# `pip install .` continues to work for direct CLI consumers and so any
+# upstream merge from fabfuel doesn't fight a duplicate metadata source.
+# This file is purely tool config (ruff, pyright).
+#
+# Refer to AGENTS.md for the full quality-gate workflow.
+
+# ─── ruff (lint + format) ─────────────────────────────────────────────────
+[tool.ruff]
+target-version = "py310"
+# 127 matches the existing flake8 config used by upstream's CI:
+#   flake8 --max-line-length=127
+# We keep the same width to avoid spurious churn on every wrap-formatted
+# line in ecs_deploy/cli.py (which has very long click decorators).
+line-length = 127
+extend-exclude = [".venv", "venv", "build", "dist"]
+
+[tool.ruff.lint]
+# Conservative rule set at fork bootstrap: match upstream's flake8 gate
+# exactly so we don't create CI false-positives on unrelated upstream code.
+#
+# Upstream CI ran:
+#   flake8 --select=E9,F63,F7,F82 --max-line-length=127
+#
+# We mirror that here. Expanding to (E, W, I, B, C4, SIM, ARG, S) is a
+# planned follow-up — it surfaces ~266 real lint issues against current
+# upstream code, including F811 duplicate-test-name bugs in test_slack.py
+# that need to be fixed in a separate cleanup PR (not the bootstrap).
+select = ["E9", "F63", "F7", "F82"]
+
+[tool.ruff.lint.per-file-ignores]
+# (intentionally empty during bootstrap; expand alongside rule-set widening)
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+
+# ─── pyright (static types) ───────────────────────────────────────────────
+[tool.pyright]
+include = ["ecs_deploy"]
+exclude = ["**/__pycache__", ".venv", "venv", "build", "dist", "tests"]
+pythonVersion = "3.10"
+# `basic` keeps the bar achievable while still surfacing real None-safety
+# bugs. The boto3/botocore type stubs are not enabled — they would force
+# an avalanche of None-checks against optional fields in TaskDefinition
+# responses that the existing code handles via duck-typing.
+typeCheckingMode = "basic"
+reportMissingTypeStubs = "none"
