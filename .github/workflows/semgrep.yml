@@ -24,7 +24,15 @@ jobs:
       pull-requests: write
       issues: write
     uses: ignitetech-group/semgrep/.github/workflows/semgrep-reusable.yml@v1
-    secrets: inherit
+    # Least-privilege: pass only the one secret the reusable workflow needs,
+    # instead of `secrets: inherit` (which hands it every repo/org secret).
+    # The reusable declares SEMGREP_APP_TOKEN under its workflow_call.secrets
+    # schema on the v1 tag. IMPORTANT: do not deploy this ahead of that tag —
+    # a caller passing a secret the reusable hasn't declared fails at startup
+    # with zero jobs. SEMGREP_ORG / SEMGREP_JOBS / SEMGREP_MAX_MEMORY are
+    # `vars`, not secrets, so they are unaffected.
+    secrets:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
     with:
       target_branch: ${{ github.event_name != 'pull_request' && (github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch || github.ref_name) || '' }}
       is_pr: ${{ github.event_name == 'pull_request' }}
